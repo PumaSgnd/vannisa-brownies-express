@@ -24,7 +24,6 @@ exports.login = (req, res) => {
       return res.status(403).json({ message: "Akun tidak aktif" });
     }
 
-    // === DEBUG TARUH DI SINI ===
     bcrypt.compare(password, user.password.replace(/^\$2y\$/, "$2b$"), (err, match) => {
       console.log("==== DEBUG LOGIN ====");
       console.log("Input username :", username);

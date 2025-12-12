@@ -3,23 +3,28 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
+const authMiddleware = require("./middleware/authMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const coaRoutes = require("./routes/coaRoutes");
 const pelangganRoutes = require("./routes/pelangganRoutes");
 const produkRoutes = require("./routes/produkRoutes");
-const authMiddleware = require("./middleware/authMiddleware");
-
+const bebanRoutes = require("./routes/bebanRoute");
+const jurnalBebanRoutes = require("./routes/jurnalBebanRoutes")
+const transaksiRoutes = require("./routes/transaksiPenjualanRoutes");
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use("/api/auth", authRoutes);
 app.use("/api/users", authMiddleware, userRoutes);
 app.use("/api/coa", authMiddleware, coaRoutes);
 app.use("/api/pelanggan", authMiddleware, pelangganRoutes);
 app.use("/api/produk", authMiddleware, produkRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/beban", authMiddleware, bebanRoutes);
+app.use("/api/jurnal-beban", authMiddleware, jurnalBebanRoutes);
+app.use("/api/transaksi-penjualan", authMiddleware, transaksiRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

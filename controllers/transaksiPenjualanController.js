@@ -1,4 +1,5 @@
 const Transaksi = require("../models/transaksiPenjualanModel");
+const Jurnal = require("../models/jurnalPenjualanModel");
 
 exports.getAll = (req, res) => {
   Transaksi.getAll((err, rows) => {
@@ -98,15 +99,10 @@ exports.update = (req, res) => {
     status
   } = req.body;
 
-  // 1. Cek apakah id_produk valid
   Transaksi.getHargaProduk(id_produk, (err, produk) => {
     if (err) return res.status(500).json(err);
-
-    // PRODUK TIDAK ADA -> ERROR WAJIB
     if (!produk || produk.length === 0) {
-      return res.status(404).json({
-        message: "Produk tidak ditemukan untuk ID " + id_produk
-      });
+      return res.status(404).json({ message: "Produk tidak ditemukan" });
     }
 
     const harga_satuan = produk[0].harga_jual;
@@ -126,7 +122,56 @@ exports.update = (req, res) => {
 
     Transaksi.update(id, data, (err) => {
       if (err) return res.status(500).json(err);
-      res.json({ message: "Transaksi berhasil diupdate" });
+
+      /**
+       * ==========================
+       * LOGIKA JURNAL
+       * ==========================
+       */
+
+      // 🔴 JIKA STATUS BUKAN DIVERIFIKASI → HAPUS JURNAL (JIKA ADA)
+      if (status !== "diverifikasi") {
+        Jurnal.deleteByTransaksiId(id, () => {
+          return res.json({
+            message: "Transaksi diupdate & jurnal dihapus (jika ada)"
+          });
+        });
+        return;
+      }
+
+      // 🟢 JIKA STATUS = DIVERIFIKASI
+      Jurnal.getByTransaksiId(id, (err, rows) => {
+        if (err) return res.status(500).json(err);
+
+        // ❗ SUDAH ADA JURNAL → JANGAN BUAT LAGI
+        if (rows.length > 0) {
+          return res.json({
+            message: "Transaksi diverifikasi (jurnal sudah ada)"
+          });
+        }
+
+        // ❗ BELUM ADA → BUAT JURNAL
+        const jurnalData = {
+          id_transaksi: id,
+          tanggal: tanggal_jual,
+          id_coa: 3, // COA PENJUALAN
+          nominal: total_harga,
+          tipe_balance: "kredit",
+          keterangan: "Penjualan produk"
+        };
+
+        Jurnal.insert(jurnalData, (errJurnal) => {
+          if (errJurnal) {
+            return res.status(500).json({
+              message: "Transaksi diverifikasi tapi gagal membuat jurnal"
+            });
+          }
+
+          return res.json({
+            message: "Transaksi diverifikasi & jurnal dibuat"
+          });
+        });
+      });
     });
   });
 };

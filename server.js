@@ -12,6 +12,7 @@ const produkRoutes = require("./routes/produkRoutes");
 const bebanRoutes = require("./routes/bebanRoute");
 const jurnalBebanRoutes = require("./routes/jurnalBebanRoutes")
 const transaksiRoutes = require("./routes/transaksiPenjualanRoutes");
+const jurnalPenjualanRoutes = require("./routes/jurnalPenjualanRoutes");
 const app = express();
 
 app.use(cors());
@@ -24,6 +25,7 @@ app.use("/api/pelanggan", authMiddleware, pelangganRoutes);
 app.use("/api/produk", authMiddleware, produkRoutes);
 app.use("/api/beban", authMiddleware, bebanRoutes);
 app.use("/api/jurnal-beban", authMiddleware, jurnalBebanRoutes);
+app.use("/api/jurnal-penjualan", authMiddleware, jurnalPenjualanRoutes);
 app.use("/api/transaksi-penjualan", authMiddleware, transaksiRoutes);
 
 const PORT = process.env.PORT || 5000;

@@ -1,6 +1,6 @@
 const db = require("../config/db");
 
-// GET ALL JURNAL DP
+// GET ALL JURNAL DP (HANYA DP BELUM LUNAS)
 exports.getAll = (callback) => {
   const sql = `
     SELECT 
@@ -11,7 +11,8 @@ exports.getAll = (callback) => {
       j.nominal,
       j.tipe_balance,
       j.keterangan,
-      j.created_at
+      j.created_at,
+      dp.status
     FROM jurnal_dp j
     JOIN down_payment dp ON dp.id = j.id_dp
     WHERE dp.status = 'Belum Lunas'
@@ -20,16 +21,55 @@ exports.getAll = (callback) => {
   db.query(sql, callback);
 };
 
-// CREATE JURNAL DP
-exports.create = (data, callback) => {
-  db.query("INSERT INTO jurnal_dp SET ?", data, callback);
+// GET JURNAL BY ID (UNTUK VALIDASI)
+exports.getById = (id_jurnal_dp, callback) => {
+  const q = `
+    SELECT j.*, dp.status
+    FROM jurnal_dp j
+    JOIN down_payment dp ON dp.id = j.id_dp
+    WHERE j.id = ?
+  `;
+  db.query(q, [id_jurnal_dp], callback);
 };
 
-// CHECK EXIST BY DP
-exports.getByDP = (id_dp, callback) => {
+exports.createBatch = (data, callback) => {
+  const sql = `
+    INSERT INTO jurnal_dp
+    (id_dp, tanggal, kode, nominal, tipe_balance, keterangan, created_at)
+    VALUES ?
+  `;
+
+  const values = data.map(item => [
+    item.id_dp,
+    item.tanggal,
+    item.kode,
+    item.nominal,
+    item.tipe_balance,
+    item.keterangan,
+    item.created_at
+  ]);
+
+  db.query(sql, [values], callback);
+};
+
+// UPDATE
+exports.update = (id_jurnal_dp, data, callback) => {
+  const q = `
+    UPDATE jurnal_dp
+    SET tanggal = ?,
+        nominal = ?,
+        keterangan = ?
+    WHERE id = ?
+  `;
   db.query(
-    "SELECT id FROM jurnal_dp WHERE id_dp = ?",
-    [id_dp],
+    q,
+    [data.tanggal, data.nominal, data.keterangan, id_jurnal_dp],
     callback
   );
+};
+
+// DELETE BY JURNAL ID
+exports.deleteById = (id_jurnal_dp, callback) => {
+  const q = `DELETE FROM jurnal_dp WHERE id = ?`;
+  db.query(q, [id_jurnal_dp], callback);
 };

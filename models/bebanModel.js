@@ -28,6 +28,24 @@ exports.update = (id, data, callback) => {
   );
 };
 
+exports.updateByBeban = (id_beban, data, callback) => {
+  const sql = `
+    UPDATE jurnal_beban 
+    SET ? 
+    WHERE id_beban = ?
+  `;
+  db.query(sql, [data, id_beban], callback);
+};
+
+// DELETE jurnal berdasarkan id_beban (ini sudah kamu pakai)
+exports.deleteByBeban = (id_beban, callback) => {
+  db.query(
+    "DELETE FROM jurnal_beban WHERE id_beban = ?",
+    [id_beban],
+    callback
+  );
+};
+
 // DELETE
 exports.delete = (id, callback) => {
   db.query("DELETE FROM beban_operasional WHERE id = ?", [id], callback);

@@ -13,6 +13,8 @@ const bebanRoutes = require("./routes/bebanRoute");
 const jurnalBebanRoutes = require("./routes/jurnalBebanRoutes")
 const transaksiRoutes = require("./routes/transaksiPenjualanRoutes");
 const jurnalPenjualanRoutes = require("./routes/jurnalPenjualanRoutes");
+const DP = require("./routes/dpRoute");
+const jurnalDPRoutes = require("./routes/jurnalDPRoute");
 const app = express();
 
 app.use(cors());
@@ -27,6 +29,8 @@ app.use("/api/beban", authMiddleware, bebanRoutes);
 app.use("/api/jurnal-beban", authMiddleware, jurnalBebanRoutes);
 app.use("/api/jurnal-penjualan", authMiddleware, jurnalPenjualanRoutes);
 app.use("/api/transaksi-penjualan", authMiddleware, transaksiRoutes);
+app.use("/api/dp", authMiddleware, DP);
+app.use("/api/jurnal-dp", authMiddleware, jurnalDPRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

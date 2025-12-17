@@ -63,7 +63,7 @@ exports.updateBeban = (req, res) => {
     id_user
   } = req.body;
 
-  const data = {
+  const dataBeban = {
     jenis_beban,
     kode_akun,
     nominal,
@@ -73,9 +73,24 @@ exports.updateBeban = (req, res) => {
     updated_at: new Date(),
   };
 
-  Beban.update(id, data, (err) => {
+  Beban.update(id, dataBeban, (err) => {
     if (err) return res.status(500).json(err);
-    res.json({ message: "Beban updated" });
+
+    // 🔥 UPDATE JURNAL YANG TERKAIT (BUKAN CREATE)
+    const dataJurnal = {
+      tanggal: tanggal_beban,
+      kode: kode_akun,
+      nominal,
+      tipe_balance: "debit",
+      keterangan,
+      updated_at: new Date(),
+    };
+
+    JurnalBeban.updateByBeban(id, dataJurnal, (err2) => {
+      if (err2) return res.status(500).json(err2);
+
+      res.json({ message: "Beban + Jurnal updated" });
+    });
   });
 };
 

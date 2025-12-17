@@ -5,6 +5,16 @@ exports.getAll = (callback) => {
   db.query("SELECT * FROM coa", callback);
 };
 
+exports.getByKode = (kode_akun, callback) => {
+  const q = `
+    SELECT id, kode_akun 
+    FROM coa 
+    WHERE kode_akun = ?
+    LIMIT 1
+  `;
+  db.query(q, [kode_akun], callback);
+};
+
 // Create akun
 exports.create = (data, callback) => {
   db.query("INSERT INTO coa SET ?", data, callback);

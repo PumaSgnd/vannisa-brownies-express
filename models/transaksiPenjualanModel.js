@@ -32,6 +32,14 @@ const Transaksi = {
     db.query(q, [id_produk], callback);
   },
 
+  create(data, callback) {
+    db.query(
+      "INSERT INTO transaksi_penjualan SET ?",
+      data,
+      callback
+    );
+  },
+
   insert(data, callback) {
     const q = `
       INSERT INTO transaksi_penjualan 

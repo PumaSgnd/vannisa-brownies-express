@@ -36,7 +36,7 @@ app.use("/api/dp", authMiddleware, DP);
 app.use("/api/jurnal-dp", authMiddleware, jurnalDPRoutes);
 app.use("/api/buku-besar", authMiddleware, bukuBesarRoutes);
 app.use("/api/laporan-penjualan", authMiddleware, laporanPenjualanRoutes);
-app.use("/api/laporan-laba-rugi", laporanLabaRugiRoutes);
+app.use("/api/laporan-laba-rugi", authMiddleware, laporanLabaRugiRoutes);
 
 
 const PORT = process.env.PORT || 5000;

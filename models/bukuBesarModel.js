@@ -1,46 +1,107 @@
 const db = require("../config/db");
 
 const BukuBesarModel = {
-    getAll: () => {
+
+    getAll() {
         return new Promise((resolve, reject) => {
-            const query = `
-                SELECT 
-                    jp.id_jurnal_penjualan AS id,
-                    jp.id_coa AS kode_akun,
-                    c.tipe_balance AS tipe_akun_normal,
-                    jp.tanggal,
-                    jp.keterangan,
-                    CASE WHEN jp.tipe_balance = 'debit' THEN jp.nominal ELSE 0 END AS debit,
-                    CASE WHEN jp.tipe_balance = 'kredit' THEN jp.nominal ELSE 0 END AS kredit,
-                    jp.id_transaksi AS ref_transaksi,
-                    jp.created_at
-                FROM jurnal_penjualan jp
-                JOIN coa c ON c.id = jp.id_coa
-
-                UNION ALL
-
-                SELECT 
-                    jb.id_jurnal_beban AS id,
-                    jb.kode AS kode_akun,
-                    c.tipe_balance AS tipe_akun_normal,
-                    jb.tanggal,
-                    jb.keterangan,
-                    CASE WHEN jb.tipe_balance = 'debit' THEN jb.nominal ELSE 0 END AS debit,
-                    CASE WHEN jb.tipe_balance = 'kredit' THEN jb.nominal ELSE 0 END AS kredit,
-                    jb.id_beban AS ref_transaksi,
-                    jb.created_at
-                FROM jurnal_beban jb
-                JOIN coa c ON c.kode_akun = jb.kode
-
-                ORDER BY tanggal ASC, id ASC
-            `;
-
-            db.query(query, (err, rows) => {
+            const q = `
+        SELECT 
+          bb.id,
+          bb.id_coa,
+          c.kode_akun,
+          c.nama_akun,
+          bb.tanggal,
+          bb.keterangan,
+          bb.debit,
+          bb.kredit,
+          bb.ref_transaksi,
+          bb.created_at,
+          SUM(
+            CASE 
+              WHEN c.tipe_balance = 'DEBIT'
+                THEN bb.debit - bb.kredit
+              ELSE bb.kredit - bb.debit
+            END
+          ) OVER (
+            PARTITION BY bb.id_coa
+            ORDER BY bb.tanggal, bb.id
+          ) AS saldo
+        FROM buku_besar bb
+        JOIN coa c ON c.id = bb.id_coa
+        ORDER BY bb.id_coa, bb.tanggal, bb.id
+      `;
+            db.query(q, (err, rows) => {
                 if (err) reject(err);
                 else resolve(rows);
             });
         });
-    }
+    },
+
+    getByAkun(id_coa) {
+        return new Promise((resolve, reject) => {
+            const q = `
+        SELECT 
+          bb.id,
+          bb.tanggal,
+          bb.keterangan,
+          bb.debit,
+          bb.kredit,
+          bb.ref_transaksi,
+          bb.created_at,
+          SUM(
+            CASE 
+              WHEN c.tipe_balance = 'DEBIT'
+                THEN bb.debit - bb.kredit
+              ELSE bb.kredit - bb.debit
+            END
+          ) OVER (
+            PARTITION BY bb.id_coa
+            ORDER BY bb.tanggal, bb.id
+          ) AS saldo
+        FROM buku_besar bb
+        JOIN coa c ON c.id = bb.id_coa
+        WHERE bb.id_coa = ?
+        ORDER BY bb.tanggal, bb.id
+      `;
+            db.query(q, [id_coa], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+    },
+
+    insertFromJurnal(jurnal, callback) {
+        const q = `
+      INSERT INTO buku_besar
+      (id_jurnal, id_coa, tanggal, keterangan, debit, kredit, ref_transaksi)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+        db.query(q, [
+            jurnal.id_jurnal,
+            jurnal.id_coa,
+            jurnal.tanggal,
+            jurnal.keterangan,
+            jurnal.debit || 0,
+            jurnal.kredit || 0,
+            jurnal.id_transaksi || jurnal.id_dp || jurnal.id_beban
+        ], callback);
+    },
+
+    deleteByJurnal(id_jurnal, callback) {
+        db.query(
+            "DELETE FROM buku_besar WHERE id_jurnal = ?",
+            [id_jurnal],
+            callback
+        );
+    },
+
+    deleteByTransaksi(id_transaksi, callback) {
+        const q = `
+      DELETE FROM buku_besar
+      WHERE ref_transaksi = ?
+    `;
+        db.query(q, [id_transaksi], callback);
+    },
 };
 
 module.exports = BukuBesarModel;

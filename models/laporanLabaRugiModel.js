@@ -27,18 +27,25 @@ const LaporanLabaRugiModel = {
         return new Promise((resolve, reject) => {
 
             const pendapatanQuery = `
-      SELECT SUM(jp.nominal) AS total
-      FROM jurnal_penjualan jp
-      WHERE jp.tanggal BETWEEN ? AND ?
-        AND jp.tipe_balance = 'kredit'
-    `;
+            SELECT SUM(j.kredit) AS total
+            FROM jurnal_umum j
+            JOIN coa c ON j.id_coa = c.id
+            WHERE c.tipe_balance = 'KREDIT'
+                AND j.kredit > 0
+                AND j.id_beban IS NULL
+                AND j.id_dp IS NULL
+                AND j.tanggal BETWEEN ? AND ?
+        `;
 
             const bebanQuery = `
-      SELECT SUM(jb.nominal) AS total
-      FROM jurnal_beban jb
-      WHERE jb.tanggal BETWEEN ? AND ?
-        AND jb.tipe_balance = 'debit'
-    `;
+            SELECT SUM(j.debit) AS total
+            FROM jurnal_umum j
+            JOIN coa c ON j.id_coa = c.id
+            WHERE c.tipe_balance = 'DEBIT'
+                AND j.debit > 0
+                AND j.id_transaksi IS NULL
+                AND j.tanggal BETWEEN ? AND ?
+        `;
 
             db.query(pendapatanQuery, [start, end], (err, pRows) => {
                 if (err) return reject(err);
@@ -59,6 +66,7 @@ const LaporanLabaRugiModel = {
             });
         });
     },
+
 
     saveLaporan: (data) => {
         return new Promise((resolve, reject) => {

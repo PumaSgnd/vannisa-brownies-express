@@ -15,6 +15,7 @@ const transaksiRoutes = require("./routes/transaksiPenjualanRoutes");
 const jurnalPenjualanRoutes = require("./routes/jurnalPenjualanRoutes");
 const DP = require("./routes/dpRoute");
 const jurnalDPRoutes = require("./routes/jurnalDPRoute");
+const jurnalUmumRoutes = require("./routes/jurnalUmumRoute");
 const bukuBesarRoutes = require("./routes/bukuBesarRoutes");
 const laporanPenjualanRoutes = require("./routes/laporanPenjualanRoutes");
 const laporanLabaRugiRoutes = require("./routes/laporanLabaRugiRoutes");
@@ -37,7 +38,7 @@ app.use("/api/jurnal-dp", authMiddleware, jurnalDPRoutes);
 app.use("/api/buku-besar", authMiddleware, bukuBesarRoutes);
 app.use("/api/laporan-penjualan", authMiddleware, laporanPenjualanRoutes);
 app.use("/api/laporan-laba-rugi", authMiddleware, laporanLabaRugiRoutes);
-
+app.use("/api/jurnal-umum", jurnalUmumRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

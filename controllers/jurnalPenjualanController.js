@@ -1,9 +1,5 @@
 const Jurnal = require("../models/jurnalPenjualanModel");
 
-/**
- * GET ALL JURNAL PENJUALAN
- * Hanya transaksi dengan status = 'diverifikasi'
- */
 exports.getAll = (req, res) => {
   Jurnal.getAll((err, rows) => {
     if (err) {
@@ -16,9 +12,6 @@ exports.getAll = (req, res) => {
   });
 };
 
-/**
- * UPDATE JURNAL PENJUALAN
- */
 exports.update = (req, res) => {
   const id = req.params.id;
 
@@ -30,7 +23,6 @@ exports.update = (req, res) => {
     keterangan
   } = req.body;
 
-  // validasi wajib
   if (!id_coa || !nominal) {
     return res.status(400).json({
       message: "id_coa dan nominal wajib diisi"
@@ -53,7 +45,6 @@ exports.update = (req, res) => {
       });
     }
 
-    // mysql / mysql2 safe check
     if (!result || result.affectedRows === 0) {
       return res.status(404).json({
         message: "Data jurnal tidak ditemukan"
@@ -66,9 +57,6 @@ exports.update = (req, res) => {
   });
 };
 
-/**
- * DELETE JURNAL PENJUALAN
- */
 exports.delete = (req, res) => {
   const id = req.params.id;
 

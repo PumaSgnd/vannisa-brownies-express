@@ -30,7 +30,7 @@ exports.update = (id, data, callback) => {
 
 exports.updateByBeban = (id_beban, data, callback) => {
   const sql = `
-    UPDATE jurnal_beban 
+    UPDATE jurnal_umum 
     SET ? 
     WHERE id_beban = ?
   `;
@@ -40,7 +40,7 @@ exports.updateByBeban = (id_beban, data, callback) => {
 // DELETE jurnal berdasarkan id_beban (ini sudah kamu pakai)
 exports.deleteByBeban = (id_beban, callback) => {
   db.query(
-    "DELETE FROM jurnal_beban WHERE id_beban = ?",
+    "DELETE FROM jurnal_umum WHERE id_beban = ?",
     [id_beban],
     callback
   );

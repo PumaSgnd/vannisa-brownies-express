@@ -1,6 +1,8 @@
 const DP = require("../models/dpModel");
-const JurnalDP = require("../models/jurnalDPModel");
-const JurnalPenjualan = require("../models/jurnalPenjualanModel");
+// const JurnalDP = require("../models/jurnalDPModel");
+// const JurnalPenjualan = require("../models/jurnalPenjualanModel");
+const JurnalUmum = require("../models/jurnalUmumModel");
+const BukuBesar = require("../models/bukuBesarModel");
 const COA = require("../models/coaModel");
 const Produk = require("../models/produkModel");
 const Transaksi = require("../models/transaksiPenjualanModel");
@@ -24,7 +26,6 @@ exports.getDP = (req, res) => {
   });
 };
 
-// CREATE
 exports.createDP = (req, res) => {
   const {
     id_pelanggan,
@@ -41,9 +42,7 @@ exports.createDP = (req, res) => {
   }
 
   if (!jumlah_barang || jumlah_barang <= 0) {
-    return res.status(400).json({
-      message: "Jumlah barang wajib diisi"
-    });
+    return res.status(400).json({ message: "Jumlah barang wajib diisi" });
   }
 
   DP.getLastKode((err, rows) => {
@@ -55,7 +54,6 @@ exports.createDP = (req, res) => {
       nextKode = `DP-${String(lastNum + 1).padStart(3, "0")}`;
     }
 
-    // 🔽 Ambil harga produk
     Produk.getById(id_produk, (errP, rowsP) => {
       if (errP) return res.status(500).json(errP);
       if (rowsP.length === 0) {
@@ -72,8 +70,7 @@ exports.createDP = (req, res) => {
         });
       }
 
-      // 🔽 Simpan DP
-      const data = {
+      const dataDP = {
         kode_transaksi: nextKode,
         id_pelanggan,
         id_produk,
@@ -87,39 +84,53 @@ exports.createDP = (req, res) => {
         updated_at: new Date()
       };
 
-      DP.create(data, (err2, result) => {
+      DP.create(dataDP, (err2, result) => {
         if (err2) return res.status(500).json(err2);
 
         const id_dp = result.insertId;
 
-        const jurnalDP = [
-          {
+        const jurnal = [
+          [
+            tanggal_dp,
+            keterangan,
+            COA_KAS,
+            nominal_dp,
+            0,
+            "dp",
+            null,
             id_dp,
-            tanggal: tanggal_dp,
-            kode: "KAS",
-            nominal: nominal_dp,
-            tipe_balance: "debit",
-            keterangan: "Penerimaan DP",
-            created_at: new Date()
-          },
-          {
+            null,
+            id_user
+          ],
+          [
+            tanggal_dp,
+            "DP Pelanggan",
+            COA_PIUTANG,
+            0,
+            nominal_dp,
+            "dp",
+            null,
             id_dp,
-            tanggal: tanggal_dp,
-            kode: "PIUTANG",
-            nominal: nominal_dp,
-            tipe_balance: "kredit",
-            keterangan: "DP pelanggan",
-            created_at: new Date()
-          }
+            null,
+            id_user
+          ]
         ];
 
-        JurnalDP.createBatch(jurnalDP, (err3) => {
+        JurnalUmum.insertBatch(jurnal, (err3) => {
           if (err3) return res.status(500).json(err3);
 
-          res.status(201).json({
-            message: "DP berhasil dibuat",
-            kode_transaksi: nextKode,
-            total_harga: totalHarga
+          JurnalUmum.getByDP(id_dp, (err4, jurnalRows) => {
+            if (err4) return res.status(500).json(err4);
+
+            jurnalRows.forEach(j => {
+              BukuBesar.insertFromJurnal(j, () => { });
+            });
+
+            res.status(201).json({
+              message: "DP, Jurnal & Buku Besar tersimpan",
+              kode_transaksi: nextKode,
+              total_harga: totalHarga
+            });
           });
         });
       });
@@ -145,8 +156,20 @@ exports.lunasiDP = (req, res) => {
 
     const dp = rows[0];
 
+    if (dp.status === "Lunas") {
+      return res.status(400).json({
+        message: "DP sudah lunas"
+      });
+    }
+
     const totalHarga = dp.harga_jual * dp.jumlah_barang;
     const totalBayar = Number(dp.nominal_dp) + Number(nominal_pelunasan);
+
+    if (totalBayar > totalHarga) {
+      return res.status(400).json({
+        message: "Nominal pelunasan melebihi total harga"
+      });
+    }
 
     // ✅ Tentukan status
     const statusDP = totalBayar >= totalHarga ? "Lunas" : "Belum Lunas";
@@ -182,8 +205,23 @@ exports.lunasiDP = (req, res) => {
 exports.deleteDP = (req, res) => {
   const { id } = req.params;
 
-  DP.delete(id, (err) => {
+  // 1️⃣ ambil jurnal DP
+  JurnalUmum.getByDP(id, (err, jurnalRows) => {
     if (err) return res.status(500).json(err);
-    res.json({ message: "Down Payment deleted" });
+
+    // 2️⃣ hapus buku besar
+    jurnalRows.forEach(j => {
+      BukuBesar.deleteByJurnal(j.id_jurnal, () => { });
+    });
+
+    // 3️⃣ hapus jurnal
+    JurnalUmum.deleteByDP(id, () => {
+
+      // 4️⃣ hapus DP
+      DP.delete(id, () => {
+        res.json({ message: "DP + Jurnal + Buku Besar dihapus" });
+      });
+
+    });
   });
 };

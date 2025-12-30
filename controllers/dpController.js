@@ -104,7 +104,7 @@ exports.createDP = (req, res) => {
           ],
           [
             tanggal_dp,
-            "DP Pelanggan",
+            keterangan,
             COA_PIUTANG,
             0,
             nominal_dp,

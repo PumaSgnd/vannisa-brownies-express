@@ -57,7 +57,7 @@ exports.createBeban = (req, res) => {
         ],
         [
           tanggal_beban,
-          "Pembayaran beban",
+          keterangan,
           COA_KAS,
           0,
           nominal,
@@ -138,7 +138,7 @@ exports.updateBeban = (req, res) => {
             ],
             [
               tanggal_beban,
-              "Pembayaran beban",
+              keterangan,
               COA_KAS,
               0,
               nominal,

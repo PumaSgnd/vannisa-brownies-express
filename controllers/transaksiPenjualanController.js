@@ -185,8 +185,8 @@ exports.update = (req, res) => {
           }
 
           const now = new Date();
-          const keteranganKas = `Pemasukan ${formatTanggalJam(now)}`;
-          const keteranganPenjualan = `Penjualan ${namaProduk} ${jumlah_barang} ${satuan}`;
+          const keteranganKas = `Pemasukan ${namaProduk} ${jumlah_barang} ${satuan}. ${formatTanggalJam(now)}`;
+          const keteranganPenjualan = `Penjualan ${namaProduk} ${jumlah_barang} ${satuan}. ${formatTanggalJam(now)}`;
 
           const jurnalData = [
             [

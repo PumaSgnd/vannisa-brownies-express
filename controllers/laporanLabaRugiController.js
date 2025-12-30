@@ -18,7 +18,7 @@ const LaporanLabaRugiController = {
             res.status(500).json({ error: "Gagal mengambil laporan laba rugi" });
         }
     },
-    
+
     generate: async (req, res) => {
         try {
             const { start, end } = req.query;
@@ -58,6 +58,22 @@ const LaporanLabaRugiController = {
         }
     },
 
+    getDetailLaporan: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const detail = await LaporanLabaRugiModel.getDetailByLaporanId(id);
+
+            res.json({
+                status: "success",
+                transaksi: detail.transaksi,
+                beban: detail.beban
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: "Gagal mengambil detail laporan" });
+        }
+    }
 };
 
 module.exports = LaporanLabaRugiController;

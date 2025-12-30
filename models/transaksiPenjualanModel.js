@@ -41,6 +41,24 @@ const Transaksi = {
     db.query(q, [id_produk], callback);
   },
 
+  getForLaporan(tanggal_awal, tanggal_akhir, callback) {
+    const q = `
+      SELECT 
+        tanggal_jual AS tanggal,
+        CONCAT(
+          'Penjualan ', p.nama_produk, ' ',
+          tp.jumlah_barang, ' ', p.satuan
+        ) AS keterangan,
+        total_harga AS jumlah
+      FROM transaksi_penjualan tp
+      LEFT JOIN produk p ON tp.id_produk = p.id_produk
+      WHERE tanggal_jual BETWEEN ? AND ?
+        AND status = 'selesai'
+      ORDER BY tanggal_jual ASC
+    `;
+    db.query(q, [tanggal_awal, tanggal_akhir], callback);
+  },
+
   create(data, callback) {
     db.query(
       "INSERT INTO transaksi_penjualan SET ?",

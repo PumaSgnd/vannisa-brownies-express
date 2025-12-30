@@ -14,6 +14,20 @@ exports.getAll = (callback) => {
   db.query(sql, callback);
 };
 
+// beban.model.js
+exports.getForLaporan = (tanggal_awal, tanggal_akhir, callback) => {
+  const q = `
+    SELECT 
+      tanggal,
+      keterangan,
+      jumlah
+    FROM beban_operasional
+    WHERE tanggal BETWEEN ? AND ?
+    ORDER BY tanggal ASC
+  `;
+  db.query(q, [tanggal_awal, tanggal_akhir], callback);
+};
+
 // CREATE
 exports.create = (data, callback) => {
   db.query("INSERT INTO beban_operasional SET ?", data, callback);
